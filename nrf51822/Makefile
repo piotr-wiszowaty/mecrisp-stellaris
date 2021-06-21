@@ -1,0 +1,37 @@
+TARGET = mecrisp-stellaris-nrf51822
+
+AS = arm-none-eabi-as
+LD = arm-none-eabi-ld
+OBJDUMP = arm-none-eabi-objdump
+OBJCOPY = arm-none-eabi-objcopy
+GDB = arm-none-eabi-gdb
+
+CFLAGS = -Wall  -Os -nostdlib -nostartfiles -ffreestanding -save-temps
+ASFLAGS = --warn --fatal-warnings -g
+
+SOURCES = $(TARGET).s flash.s interrupts.s terminal.s vectors.s
+
+all : $(TARGET).bin $(TARGET).lst
+
+$(TARGET).o : $(SOURCES)
+	$(AS) $(ASFLAGS) $(TARGET).s -o $@
+
+$(TARGET).elf : $(TARGET).ld $(TARGET).o
+	$(LD) -o $(TARGET).elf -T $(TARGET).ld $(TARGET).o
+
+$(TARGET).lst : $(TARGET).elf
+	$(OBJDUMP) -D $(TARGET).elf > $(TARGET).lst
+
+$(TARGET).bin: $(TARGET).elf
+	$(OBJCOPY) $^ $@ -O binary
+
+.PHONY: burn gdb clean
+
+burn:
+	nrf51-burn $(TARGET).elf
+
+gdb:
+	$(GDB) -tui -ex "target remote :3333" -ex "break uart_init" -ex "monitor reset halt" -ex "monitor gdb_breakpoint_override hard" $(TARGET).elf
+
+clean:
+	rm -f *.bin *.o *.elf *.lst
