@@ -156,7 +156,7 @@ uart_init:
 
 	@ Configure BRR by deviding the bus clock with the baud rate
 	ldr r1, = USART1_BRR
-	ldr r0, =16		@ 3 Mbaud / 48 MHz
+	ldr r0, =48		@ 1 Mbaud / 48 MHz
 	str r0, [r1]
 
 	.ifdef rtscts
